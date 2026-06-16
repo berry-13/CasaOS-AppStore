@@ -11,7 +11,7 @@ services:
         condition: service_healthy
       librechat-rag-api:
         condition: service_started
-    image: ghcr.io/danny-avila/librechat-dev:latest
+    image: registry.librechat.ai/danny-avila/librechat-dev:latest
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -547,7 +547,7 @@ services:
             tr_TR: PostgreSQL Şifresi
   librechat-rag-api:
     container_name: librechat-rag-api
-    image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
+    image: registry.librechat.ai/danny-avila/librechat-rag-api-dev-lite:latest
     environment:
       - DB_HOST=librechat-vectordb
       - RAG_PORT=8000
