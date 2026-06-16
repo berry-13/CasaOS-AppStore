@@ -334,13 +334,13 @@ services:
             pt_PT: Chave Secreta de Atualização JWT
             ru_RU: Секретный ключ обновления JWT
             tr_TR: JWT Yenileme Gizli Anahtarı
-  # NOTE: mongo:6.0 requires the ARMv8.2-A microarchitecture on arm64.
+  # NOTE: mongo:7.0 requires the ARMv8.2-A microarchitecture on arm64.
   # It runs on Raspberry Pi 5, Apple Silicon and modern ARM servers, but
   # crashes with "Illegal instruction" on Raspberry Pi 4 / older (ARMv8.0-A).
   # Pin to mongo:4.4.x if support for those older ARM boards is required.
   librechat-mongodb:
     container_name: librechat-mongodb
-    image: mongo:6.0
+    image: mongo:7.0
     restart: unless-stopped
     volumes:
       - type: bind
@@ -380,7 +380,7 @@ services:
             tr_TR: MongoDB Veri Dizini
   librechat-meilisearch:
     container_name: librechat-meilisearch
-    image: getmeili/meilisearch:v1.12.3
+    image: getmeili/meilisearch:v1.35.1
     restart: unless-stopped
     user: "1000:1000"
     environment:
@@ -389,7 +389,7 @@ services:
       - MEILI_MASTER_KEY=28f4xS83qvu3k3lVqgupSTTGEYq5VTWpgDf5dDRBjmk
     volumes:
       - type: bind
-        source: /DATA/AppData/$AppID/meili_data_v1.12
+        source: /DATA/AppData/$AppID/meili_data_v1.35
         target: /meili_data
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:7700/health"]
@@ -472,7 +472,7 @@ services:
             tr_TR: MeiliSearch Ana Anahtarı
   librechat-vectordb:
     container_name: librechat-vectordb
-    image: ankane/pgvector:v0.5.1
+    image: pgvector/pgvector:0.8.0-pg15-trixie
     environment:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: myuser
@@ -547,7 +547,7 @@ services:
             tr_TR: PostgreSQL Şifresi
   librechat-rag-api:
     container_name: librechat-rag-api
-    image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:v0.6.0
+    image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
     environment:
       - DB_HOST=librechat-vectordb
       - RAG_PORT=8000
@@ -672,7 +672,7 @@ x-casaos:
       **extra:**
       You can refer to the [Custom AI Endpoints](https://www.librechat.ai/docs/configuration/librechat_yaml/ai_endpoints) documentation to configure the relevant files for calling the APIs of Anyscale, ApiPie, Cohere, Deepseek, Databricks, Fireworks, Groq, HuggingFace, Mistral, OpenRouter, Perplexity, ShuttleAI, TogetherAI, Unify, and xAI.
 
-      **ARM64 note:** The bundled MongoDB (mongo:6.0) requires an ARMv8.2-A or newer CPU. It runs on Raspberry Pi 5, Apple Silicon and modern ARM servers, but not on Raspberry Pi 4 or older boards (ARMv8.0-A), where MongoDB will fail to start.
+      **ARM64 note:** The bundled MongoDB (mongo:7.0) requires an ARMv8.2-A or newer CPU. It runs on Raspberry Pi 5, Apple Silicon and modern ARM servers, but not on Raspberry Pi 4 or older boards (ARMv8.0-A), where MongoDB will fail to start.
     en_GB: |
       LibreChat is a full-featured, open-source AI chat interface that allows users to interact with multiple AI models through a unified platform. It supports various AI providers and offers advanced features like conversation management, plugin support, and customizable interfaces.
       **Key Features:**
@@ -694,7 +694,7 @@ x-casaos:
       **extra:**
       You can refer to the [Custom AI Endpoints](https://www.librechat.ai/docs/configuration/librechat_yaml/ai_endpoints) documentation to configure the relevant files for calling the APIs of Anyscale, ApiPie, Cohere, Deepseek, Databricks, Fireworks, Groq, HuggingFace, Mistral, OpenRouter, Perplexity, ShuttleAI, TogetherAI, Unify, and xAI.
 
-      **ARM64 note:** The bundled MongoDB (mongo:6.0) requires an ARMv8.2-A or newer CPU. It runs on Raspberry Pi 5, Apple Silicon and modern ARM servers, but not on Raspberry Pi 4 or older boards (ARMv8.0-A), where MongoDB will fail to start.
+      **ARM64 note:** The bundled MongoDB (mongo:7.0) requires an ARMv8.2-A or newer CPU. It runs on Raspberry Pi 5, Apple Silicon and modern ARM servers, but not on Raspberry Pi 4 or older boards (ARMv8.0-A), where MongoDB will fail to start.
     it_IT: |
       LibreChat è un'interfaccia chat AI completa e open-source che permette agli utenti di interagire con molteplici modelli AI attraverso una piattaforma unificata. Supporta vari fornitori AI e offre funzionalità avanzate come gestione conversazioni, supporto plugin e interfacce personalizzabili.
       **Funzionalità Principali:**
