@@ -5,8 +5,12 @@ services:
     ports:
       - "3080:3080"
     depends_on:
-      - librechat-mongodb
-      - librechat-rag-api
+      librechat-mongodb:
+        condition: service_healthy
+      librechat-meilisearch:
+        condition: service_healthy
+      librechat-rag-api:
+        condition: service_started
     image: ghcr.io/danny-avila/librechat-dev:latest
     restart: unless-stopped
     extra_hosts:
@@ -18,8 +22,8 @@ services:
       - ANTHROPIC_API_KEY=user_provided
       - HOST=0.0.0.0
       - PORT=3080
-      - DOMAIN_CLIENT=http://0.0.0.0:3080
-      - DOMAIN_SERVER=http://0.0.0.0:3080
+      - DOMAIN_CLIENT=http://localhost:3080
+      - DOMAIN_SERVER=http://localhost:3080
       - NO_INDEX=true
       - TRUST_PROXY=1
       - CONSOLE_JSON=false
@@ -66,11 +70,11 @@ services:
       - ALLOW_UNVERIFIED_EMAIL_LOGIN=true
       - SESSION_EXPIRY=1000 * 60 * 15
       - REFRESH_TOKEN_EXPIRY=(1000 * 60 * 60 * 24) * 7
-      - JWT_SECRET=16f8c0ef4a5d391b26034086c628469d3f9f497f08163ab9b40137092f2909ef
-      - JWT_REFRESH_SECRET=eaa5191f2914e30b9387fd84e254e4ba6fc51b4654968a9b0803b456a54b8418
-      - CREDS_KEY=f34be427ebb29de8d88c107a71546019685ed8b241d8f2ed00c3df97ad2566f0
-      - CREDS_IV=e2341419ec3dd3d19b13a1a87fafcbfb
-      - DEBUG_PLUGINS=true
+      - JWT_SECRET=1f41a0f90c025080d526c3229db1baf8679a7c1a7259b4db15a9958da32a14ce
+      - JWT_REFRESH_SECRET=c7549615b09147b052d59ffc63fc6000b0b7503db9d72dac55b8829333331239
+      - CREDS_KEY=a88461e4c4357935264ba49e0b9e889b88da76fe643cad4d5e0ec121ebcc05ae
+      - CREDS_IV=fe106c7cd9bc7ef747b7411c72b48a90
+      - DEBUG_PLUGINS=false
       - DEBUG_OPENAI=false
     volumes:
       - type: bind
@@ -339,6 +343,12 @@ services:
         source: /DATA/AppData/$AppID/data-node
         target: /data/db
     command: ["mongod", "--noauth"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - librechat-net
     deploy:
@@ -364,40 +374,6 @@ services:
             pt_PT: Diretório de Dados MongoDB
             ru_RU: Каталог данных MongoDB
             tr_TR: MongoDB Veri Dizini
-        - container: MONGO_INITDB_ROOT_USERNAME
-          description:
-            en_US: MongoDB Root Username
-            en_GB: MongoDB Root Username
-            it_IT: Nome Utente Root MongoDB
-            nb_NO: MongoDB Root Brukernavn
-            zh_CN: MongoDB根用户名
-            ja_JP: MongoDBルートユーザー名
-            ko_KR: MongoDB 루트 사용자명
-            fr_FR: Nom d'Utilisateur Root MongoDB
-            de_DE: MongoDB-Root-Benutzername
-            sv_SE: MongoDB Root Användarnamn
-            el_GR: Όνομα Χρήστη Root MongoDB
-            hr_HR: MongoDB Korisničko Ime Root
-            pt_PT: Nome de Utilizador Root MongoDB
-            ru_RU: Имя пользователя root MongoDB
-            tr_TR: MongoDB Kök Kullanıcı Adı
-        - container: MONGO_INITDB_ROOT_PASSWORD
-          description:
-            en_US: MongoDB Root Password
-            en_GB: MongoDB Root Password
-            it_IT: Password Root MongoDB
-            nb_NO: MongoDB Root Passord
-            zh_CN: MongoDB根密码
-            ja_JP: MongoDBルートパスワード
-            ko_KR: MongoDB 루트 비밀번호
-            fr_FR: Mot de Passe Root MongoDB
-            de_DE: MongoDB-Root-Passwort
-            sv_SE: MongoDB Root Lösenord
-            el_GR: Κωδικός Πρόσβασης Root MongoDB
-            hr_HR: MongoDB Lozinka Root
-            pt_PT: Palavra-passe Root MongoDB
-            ru_RU: Пароль root MongoDB
-            tr_TR: MongoDB Kök Şifresi
   librechat-meilisearch:
     container_name: librechat-meilisearch
     image: getmeili/meilisearch:v1.12.3
@@ -406,11 +382,17 @@ services:
     environment:
       - MEILI_HOST=http://librechat-meilisearch:7700
       - MEILI_NO_ANALYTICS=true
-      - MEILI_MASTER_KEY=DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt
+      - MEILI_MASTER_KEY=28f4xS83qvu3k3lVqgupSTTGEYq5VTWpgDf5dDRBjmk
     volumes:
       - type: bind
         source: /DATA/AppData/$AppID/meili_data_v1.12
         target: /meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - librechat-net
     x-casaos:
@@ -494,6 +476,12 @@ services:
     restart: unless-stopped
     volumes:
       - /DATA/AppData/$AppID/postgresql/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - librechat-net
     deploy:
@@ -559,9 +547,13 @@ services:
     environment:
       - DB_HOST=librechat-vectordb
       - RAG_PORT=8000
+      - POSTGRES_DB=mydatabase
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
     restart: unless-stopped
     depends_on:
-      - librechat-vectordb
+      librechat-vectordb:
+        condition: service_healthy
     networks:
       - librechat-net
     deploy:
@@ -610,6 +602,7 @@ networks:
 x-casaos:
   architectures:
     - amd64
+    - arm64
   main: librechat-api
   title:
     de_DE: LibreChat
@@ -955,7 +948,7 @@ x-casaos:
       **ekstra:**
       Anyscale, ApiPie, Cohere, Deepseek, Databricks, Fireworks, Groq, HuggingFace, Mistral, OpenRouter, Perplexity, ShuttleAI, TogetherAI, Unify ve xAI API'lerini çağırmak için ilgili dosyaları yapılandırmak üzere [Özel AI Uç Noktaları](https://www.librechat.ai/docs/configuration/librechat_yaml/ai_endpoints) belgelerine başvurabilirsiniz.
   version: "latest"
-  updateAt: "2026-05-19"
+  updateAt: "2026-06-16"
   releaseNotes: ""
   website: "https://www.librechat.ai"
   repo: "https://github.com/danny-avila/LibreChat"
